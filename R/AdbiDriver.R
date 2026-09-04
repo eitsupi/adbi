@@ -30,8 +30,8 @@ NULL
 #' @param driver An ADBC driver object, a function returning one, an ADBC Driver
 #'   Manager driver name or manifest path, or (when `pkg` is supplied) the name
 #'   of a driver function in that package. See Details for more information.
-#' @param pkg An R package containing a driver function, or `NA` to interpret a
-#'   character `driver` as an ADBC Driver Manager driver specification.
+#' @param pkg An R package containing a driver function, or `NA` if no R package
+#'   is explicitly specified.
 #'
 #' @export
 #' @rdname dbConnect
@@ -112,7 +112,7 @@ adbi <- function(driver = NA_character_, pkg = NA_character_) {
         )
       )
       drv_obj <- adbi_package_driver(pkg, fun)
-    } else if (adbi_has_package_driver(driver)) {
+    } else if (adbi_has_package_function(driver)) {
       .Deprecated(
         new = sprintf('adbi(pkg = "%s")', driver),
         msg = sprintf(
@@ -130,7 +130,12 @@ adbi <- function(driver = NA_character_, pkg = NA_character_) {
     }
   }
 
-  stopifnot(inherits(drv_obj, "adbc_driver"))
+  if (!inherits(drv_obj, "adbc_driver")) {
+    stop(
+      "The selected driver function must return an `adbc_driver` object.",
+      call. = FALSE
+    )
+  }
 
   new("AdbiDriver", driver = drv_obj)
 }
@@ -145,7 +150,7 @@ adbi_package_driver <- function(pkg, fun) {
   drv_fun()
 }
 
-adbi_has_package_driver <- function(pkg) {
+adbi_has_package_function <- function(pkg) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     return(FALSE)
   }

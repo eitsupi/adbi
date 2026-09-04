@@ -35,7 +35,7 @@ test_that("pkg explicitly selects an R package driver", {
 
 test_that("legacy package spellings warn and continue to work", {
   local_mocked_bindings(
-    adbi_has_package_driver = function(pkg) identical(pkg, "fakepkg"),
+    adbi_has_package_function = function(pkg) identical(pkg, "fakepkg"),
     adbi_package_driver = function(pkg, fun) {
       expect_identical(pkg, "fakepkg")
       expect_identical(fun, "fakepkg")
@@ -65,7 +65,7 @@ test_that("installed packages without a same-name driver use Driver Manager", {
     .package = "adbcdrivermanager"
   )
 
-  expect_false(adbi_has_package_driver("utils"))
+  expect_false(adbi_has_package_function("utils"))
   expect_identical(adbi("utils")@driver, fake_driver)
 })
 
@@ -80,4 +80,31 @@ test_that("invalid adbi() argument combinations fail clearly", {
   driver <- adbcdrivermanager::adbc_driver_monkey()
   expect_error(adbi(driver, pkg = "utils"), "cannot be supplied")
   expect_error(adbi(function() driver, pkg = "utils"), "cannot be supplied")
+})
+
+test_that("driver functions must return an adbc_driver", {
+  local_mocked_bindings(adbi_package_driver = function(pkg, fun) 42)
+  expect_error(
+    adbi(pkg = "fakepkg"),
+    "must return an `adbc_driver` object",
+    fixed = TRUE
+  )
+
+  local_mocked_bindings(
+    adbi_has_package_function = function(pkg) identical(pkg, "fakepkg")
+  )
+  expect_warning(
+    expect_error(
+      adbi("fakepkg"),
+      "must return an `adbc_driver` object",
+      fixed = TRUE
+    ),
+    class = "deprecatedWarning"
+  )
+
+  expect_error(
+    adbi(function() 42),
+    "must return an `adbc_driver` object",
+    fixed = TRUE
+  )
 })

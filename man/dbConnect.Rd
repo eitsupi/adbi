@@ -20,8 +20,8 @@ adbi(driver = NA_character_, pkg = NA_character_)
 Manager driver name or manifest path, or (when \code{pkg} is supplied) the name
 of a driver function in that package. See Details for more information.}
 
-\item{pkg}{An R package containing a driver function, or \code{NA} to interpret a
-character \code{driver} as an ADBC Driver Manager driver specification.}
+\item{pkg}{An R package containing a driver function, or \code{NA} if no R package
+is explicitly specified.}
 
 \item{drv}{An object that inherits from
 \link[DBI:DBIDriver-class]{DBI::DBIDriver},
